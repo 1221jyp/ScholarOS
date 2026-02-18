@@ -5,6 +5,8 @@ from app.models.study_session import StudySession
 from app.models.instructor_assignment import InstructorAssignment
 from app.models.attendance import Attendance
 from app.models.grade import Grade
+from app.models.staff_user import StaffUser, StaffRole
+from app.models.student_user import StudentUser
 
 __all__ = [
     "Student",
@@ -16,4 +18,7 @@ __all__ = [
     "InstructorAssignment",
     "Attendance",
     "Grade",
+    "StaffUser",
+    "StaffRole",
+    "StudentUser",
 ]

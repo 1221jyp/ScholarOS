@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from datetime import date
 
-from app.api.deps import get_db
+from app.api.deps import get_db, require_director_or_instructor
 from app.models.grade import Grade
 from app.models.student import Student
 from app.schemas.grade import (
@@ -16,7 +16,7 @@ from app.schemas.grade import (
     GradeResponse
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_director_or_instructor)])
 
 
 @router.post("", response_model=GradeResponse, status_code=201)

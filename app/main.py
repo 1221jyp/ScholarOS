@@ -5,6 +5,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from app.config import settings
+from app.database import SessionLocal
+from app.core.security import get_password_hash
 from app.api.v1 import (
     students,
     instructors,
@@ -12,7 +14,8 @@ from app.api.v1 import (
     study_sessions,
     instructor_assignments,
     attendance,
-    grades
+    grades,
+    auth,
 )
 
 # Create FastAPI application
@@ -75,6 +78,33 @@ app.include_router(
     prefix="/api/v1/grades",
     tags=["Grades"]
 )
+
+app.include_router(
+    auth.router,
+    prefix="/api/v1/auth",
+    tags=["Auth"]
+)
+
+
+@app.on_event("startup")
+async def create_initial_admin():
+    """서버 첫 실행 시 원장 계정이 없으면 자동 생성"""
+    from app.models.staff_user import StaffUser, StaffRole
+    db = SessionLocal()
+    try:
+        existing = db.query(StaffUser).filter(StaffUser.role == StaffRole.director).first()
+        if not existing:
+            admin = StaffUser(
+                username=settings.INITIAL_ADMIN_USERNAME,
+                hashed_password=get_password_hash(settings.INITIAL_ADMIN_PASSWORD),
+                name=settings.INITIAL_ADMIN_NAME,
+                role=StaffRole.director,
+            )
+            db.add(admin)
+            db.commit()
+            print(f"[ScholarOS] 초기 원장 계정이 생성되었습니다: {settings.INITIAL_ADMIN_USERNAME}")
+    finally:
+        db.close()
 
 
 @app.get("/health")

@@ -21,6 +21,16 @@ class Settings(BaseSettings):
     # Timezone
     TIMEZONE: str = "Asia/Seoul"
 
+    # JWT Authentication
+    JWT_SECRET_KEY: str = "change-this-to-a-long-random-secret-key"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24시간
+
+    # Initial Admin Account (서버 첫 실행 시 자동 생성)
+    INITIAL_ADMIN_USERNAME: str = "admin"
+    INITIAL_ADMIN_PASSWORD: str = "admin1234"
+    INITIAL_ADMIN_NAME: str = "원장"
+
     class Config:
         env_file = ".env"
         case_sensitive = True

@@ -3,11 +3,11 @@ from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
 
-from app.api.deps import get_db
+from app.api.deps import get_db, require_director_or_instructor
 from app.models.student import Student
 from app.schemas.student import StudentCreate, StudentUpdate, StudentResponse
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_director_or_instructor)])
 
 
 @router.post("", response_model=StudentResponse, status_code=201)

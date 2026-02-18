@@ -6,17 +6,22 @@ import {
   UserCheck,
   ClipboardCheck,
   GraduationCap,
+  ShieldCheck,
   X
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Sidebar = ({ isOpen, onClose }) => {
+  const { isDirector } = useAuth();
+
   const navItems = [
-    { icon: LayoutDashboard, label: '대시보드', path: '/' },
+    { icon: LayoutDashboard, label: '대시보드', path: '/dashboard' },
     { icon: Calendar, label: '조교 배치 관리', path: '/assignments', highlight: true },
     { icon: Users, label: '학생 관리', path: '/students' },
     { icon: UserCheck, label: '조교 관리', path: '/instructors' },
     { icon: ClipboardCheck, label: '출석 관리', path: '/attendance' },
     { icon: GraduationCap, label: '성적 관리', path: '/grades' },
+    ...(isDirector ? [{ icon: ShieldCheck, label: '사용자 관리', path: '/admin/users', adminOnly: true }] : []),
   ];
 
   return (
@@ -63,10 +68,10 @@ const Sidebar = ({ isOpen, onClose }) => {
                       isActive
                         ? 'bg-primary-50 text-primary-700 font-medium'
                         : 'text-gray-700 hover:bg-gray-100'
-                    } ${item.highlight ? 'border-l-4 border-primary-500' : ''}`
+                    } ${item.highlight ? 'border-l-4 border-primary-500' : ''} ${item.adminOnly ? 'border-l-4 border-purple-400' : ''}`
                   }
                 >
-                  <Icon className="w-5 h-5" />
+                  <Icon className={`w-5 h-5 ${item.adminOnly ? 'text-purple-500' : ''}`} />
                   <span>{item.label}</span>
                   {item.highlight && (
                     <span className="ml-auto text-xs bg-primary-100 text-primary-700 px-2 py-1 rounded-full">

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-from app.api.deps import get_db
+from app.api.deps import get_db, require_director_or_instructor
 from app.models.study_session import StudySession
 from app.models.instructor_assignment import InstructorAssignment
 from app.schemas.study_session import (
@@ -15,7 +15,7 @@ from app.schemas.study_session import (
     StudySessionResponse
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_director_or_instructor)])
 
 
 @router.post("", response_model=StudySessionResponse, status_code=201)

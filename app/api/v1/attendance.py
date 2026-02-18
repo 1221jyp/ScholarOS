@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from datetime import date, datetime
 
-from app.api.deps import get_db
+from app.api.deps import get_db, require_director_or_instructor
 from app.models.attendance import Attendance
 from app.models.student import Student
 from app.models.class_schedule import ClassSchedule
@@ -17,7 +17,7 @@ from app.schemas.attendance import (
     AttendanceResponse
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_director_or_instructor)])
 
 
 @router.post("", response_model=AttendanceResponse, status_code=201)

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from datetime import date
 
-from app.api.deps import get_db
+from app.api.deps import get_db, require_director_or_instructor
 from app.models.instructor_assignment import InstructorAssignment
 from app.models.study_session import StudySession
 from app.models.instructor import Instructor
@@ -17,7 +17,7 @@ from app.schemas.instructor_assignment import (
     InstructorAssignmentResponse
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_director_or_instructor)])
 
 
 @router.post("", response_model=InstructorAssignmentResponse, status_code=201)
