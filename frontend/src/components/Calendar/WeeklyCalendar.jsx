@@ -25,9 +25,9 @@ const getSessionForSlot = (dayOfWeek, slotTime, sessions) => {
     if (session.day_of_week !== dayOfWeek) continue;
     const startMinutes = timeToMinutes(session.start_time);
     const endMinutes = timeToMinutes(session.end_time);
-    if (slotMinutes >= startMinutes && slotMinutes < endMinutes) {
+    if (slotMinutes >= startMinutes && slotMinutes <= endMinutes) {
       const isStart = slotMinutes === startMinutes;
-      const rowspan = Math.ceil((endMinutes - startMinutes) / 30);
+      const rowspan = Math.ceil((endMinutes - startMinutes) / 30) + 1;
       return { session, isStart, rowspan };
     }
   }
