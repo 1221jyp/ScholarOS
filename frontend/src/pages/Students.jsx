@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Users, Mail, Phone } from 'lucide-react';
+import { Users, Phone } from 'lucide-react';
 import { studentAPI } from '../services/api';
-import { formatDate } from '../utils/dateHelpers';
 
 const Students = () => {
   const [students, setStudents] = useState([]);
@@ -84,14 +83,8 @@ const Students = () => {
                 {students.map((student) => (
                   <tr key={student.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {student.name}
-                        </div>
-                        <div className="text-sm text-gray-500 flex items-center gap-1">
-                          <Mail className="w-3 h-3" />
-                          {student.email}
-                        </div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {student.name}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -107,7 +100,7 @@ const Students = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(student.enrollment_date)}
+                      {student.enrollment_date ?? '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(student.status)}

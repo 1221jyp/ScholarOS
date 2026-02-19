@@ -5,27 +5,10 @@ from uuid import UUID
 
 from app.api.deps import get_db, require_director_or_instructor
 from app.models.instructor import Instructor
+from app.models.staff_user import StaffUser, StaffRole
 from app.schemas.instructor import InstructorCreate, InstructorUpdate, InstructorResponse
 
 router = APIRouter(dependencies=[Depends(require_director_or_instructor)])
-
-
-@router.post("", response_model=InstructorResponse, status_code=201)
-async def create_instructor(
-    instructor_data: InstructorCreate,
-    db: Session = Depends(get_db)
-):
-    """Create a new instructor"""
-    # Check for duplicate email
-    existing = db.query(Instructor).filter(Instructor.email == instructor_data.email).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
-
-    instructor = Instructor(**instructor_data.model_dump())
-    db.add(instructor)
-    db.commit()
-    db.refresh(instructor)
-    return instructor
 
 
 @router.get("", response_model=List[InstructorResponse])
@@ -35,14 +18,17 @@ async def list_instructors(
     status: str = Query(None, description="Filter by status"),
     db: Session = Depends(get_db)
 ):
-    """List all instructors with pagination"""
-    query = db.query(Instructor)
+    """조교 계정이 있는 조교 목록만 반환"""
+    linked_ids = db.query(StaffUser.instructor_id).filter(
+        StaffUser.instructor_id.isnot(None),
+        StaffUser.role == StaffRole.instructor,
+    )
+    query = db.query(Instructor).filter(Instructor.id.in_(linked_ids))
 
     if status:
         query = query.filter(Instructor.status == status)
 
-    instructors = query.offset(skip).limit(limit).all()
-    return instructors
+    return query.offset(skip).limit(limit).all()
 
 
 @router.get("/{instructor_id}", response_model=InstructorResponse)
@@ -50,7 +36,6 @@ async def get_instructor(
     instructor_id: UUID = Path(..., description="Instructor ID"),
     db: Session = Depends(get_db)
 ):
-    """Get a specific instructor by ID"""
     instructor = db.query(Instructor).filter(Instructor.id == instructor_id).first()
     if not instructor:
         raise HTTPException(status_code=404, detail="Instructor not found")
@@ -63,7 +48,6 @@ async def update_instructor(
     instructor_id: UUID = Path(..., description="Instructor ID"),
     db: Session = Depends(get_db)
 ):
-    """Update an instructor"""
     instructor = db.query(Instructor).filter(Instructor.id == instructor_id).first()
     if not instructor:
         raise HTTPException(status_code=404, detail="Instructor not found")
@@ -82,7 +66,6 @@ async def delete_instructor(
     instructor_id: UUID = Path(..., description="Instructor ID"),
     db: Session = Depends(get_db)
 ):
-    """Delete an instructor"""
     instructor = db.query(Instructor).filter(Instructor.id == instructor_id).first()
     if not instructor:
         raise HTTPException(status_code=404, detail="Instructor not found")

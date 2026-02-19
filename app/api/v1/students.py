@@ -5,27 +5,10 @@ from uuid import UUID
 
 from app.api.deps import get_db, require_director_or_instructor
 from app.models.student import Student
+from app.models.student_user import StudentUser
 from app.schemas.student import StudentCreate, StudentUpdate, StudentResponse
 
 router = APIRouter(dependencies=[Depends(require_director_or_instructor)])
-
-
-@router.post("", response_model=StudentResponse, status_code=201)
-async def create_student(
-    student_data: StudentCreate,
-    db: Session = Depends(get_db)
-):
-    """Create a new student"""
-    # Check for duplicate email
-    existing = db.query(Student).filter(Student.email == student_data.email).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
-
-    student = Student(**student_data.model_dump())
-    db.add(student)
-    db.commit()
-    db.refresh(student)
-    return student
 
 
 @router.get("", response_model=List[StudentResponse])
@@ -35,14 +18,14 @@ async def list_students(
     status: str = Query(None, description="Filter by status"),
     db: Session = Depends(get_db)
 ):
-    """List all students with pagination"""
-    query = db.query(Student)
+    """계정이 있는 학생 목록만 반환"""
+    linked_ids = db.query(StudentUser.student_id).filter(StudentUser.student_id.isnot(None))
+    query = db.query(Student).filter(Student.id.in_(linked_ids))
 
     if status:
         query = query.filter(Student.status == status)
 
-    students = query.offset(skip).limit(limit).all()
-    return students
+    return query.offset(skip).limit(limit).all()
 
 
 @router.get("/{student_id}", response_model=StudentResponse)
@@ -50,7 +33,6 @@ async def get_student(
     student_id: UUID = Path(..., description="Student ID"),
     db: Session = Depends(get_db)
 ):
-    """Get a specific student by ID"""
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
@@ -63,12 +45,10 @@ async def update_student(
     student_id: UUID = Path(..., description="Student ID"),
     db: Session = Depends(get_db)
 ):
-    """Update a student"""
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
 
-    # Update fields
     update_data = student_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(student, field, value)
@@ -83,7 +63,6 @@ async def delete_student(
     student_id: UUID = Path(..., description="Student ID"),
     db: Session = Depends(get_db)
 ):
-    """Delete a student"""
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")

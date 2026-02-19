@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, RefreshCw, Users, GraduationCap } from 'lucide-react';
-import { authAPI, instructorAPI, studentAPI } from '../services/api';
+import { authAPI } from '../services/api';
 
 const ROLE_LABELS = { director: '원장', instructor: '조교' };
+
+const EMPTY_FORM = { username: '', password: '', name: '', phone: '', role: 'instructor' };
 
 export default function AdminUsers() {
   const [activeTab, setActiveTab] = useState('staff');
   const [staffUsers, setStaffUsers] = useState([]);
   const [studentUsers, setStudentUsers] = useState([]);
-  const [instructors, setInstructors] = useState([]);
-  const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ username: '', password: '', name: '', role: 'instructor', instructor_id: '', student_id: '' });
+  const [form, setForm] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState('');
 
   useEffect(() => {
@@ -22,16 +22,12 @@ export default function AdminUsers() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [staffRes, studentRes, instrRes, stuRes] = await Promise.all([
+      const [staffRes, studentRes] = await Promise.all([
         authAPI.listStaffUsers(),
         authAPI.listStudentUsers(),
-        instructorAPI.getAll(),
-        studentAPI.getAll(),
       ]);
       setStaffUsers(staffRes.data);
       setStudentUsers(studentRes.data);
-      setInstructors(instrRes.data);
-      setStudents(stuRes.data);
     } catch {
       // 조용히 실패
     } finally {
@@ -48,19 +44,19 @@ export default function AdminUsers() {
           username: form.username,
           password: form.password,
           name: form.name,
+          phone: form.phone || null,
           role: form.role,
-          instructor_id: form.instructor_id || null,
         });
       } else {
         await authAPI.createStudentUser({
           username: form.username,
           password: form.password,
           name: form.name,
-          student_id: form.student_id || null,
+          phone: form.phone || null,
         });
       }
       setShowForm(false);
-      setForm({ username: '', password: '', name: '', role: 'instructor', instructor_id: '', student_id: '' });
+      setForm(EMPTY_FORM);
       fetchAll();
     } catch (err) {
       setFormError(err.response?.data?.detail ?? '생성에 실패했습니다.');
@@ -68,7 +64,7 @@ export default function AdminUsers() {
   };
 
   const handleDelete = async (id, type) => {
-    if (!confirm('이 계정을 삭제하시겠습니까?')) return;
+    if (!confirm('이 계정을 삭제하시겠습니까?\n연결된 학생/조교 데이터도 함께 삭제됩니다.')) return;
     try {
       if (type === 'staff') {
         await authAPI.deleteStaffUser(id);
@@ -107,7 +103,7 @@ export default function AdminUsers() {
             <RefreshCw className="w-4 h-4 text-gray-500" />
           </button>
           <button
-            onClick={() => { setShowForm(true); setFormError(''); }}
+            onClick={() => { setShowForm(true); setFormError(''); setForm(EMPTY_FORM); }}
             className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -119,7 +115,7 @@ export default function AdminUsers() {
       {/* 탭 */}
       <div className="flex border-b border-gray-200 mb-4">
         <button
-          onClick={() => setActiveTab('staff')}
+          onClick={() => { setActiveTab('staff'); setShowForm(false); }}
           className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'staff'
               ? 'border-primary-600 text-primary-600'
@@ -130,7 +126,7 @@ export default function AdminUsers() {
           직원 계정 ({staffUsers.length})
         </button>
         <button
-          onClick={() => setActiveTab('student')}
+          onClick={() => { setActiveTab('student'); setShowForm(false); }}
           className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'student'
               ? 'border-primary-600 text-primary-600'
@@ -179,53 +175,30 @@ export default function AdminUsers() {
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
                 className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="표시 이름"
+                placeholder="이름"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-gray-600">전화번호 (선택)</label>
+              <input
+                type="text"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="010-0000-0000"
               />
             </div>
 
             {activeTab === 'staff' && (
-              <>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-gray-600">역할</label>
-                  <select
-                    value={form.role}
-                    onChange={(e) => setForm({ ...form, role: e.target.value })}
-                    className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="instructor">조교</option>
-                    <option value="director">원장</option>
-                  </select>
-                </div>
-                {form.role === 'instructor' && (
-                  <div className="flex flex-col gap-1 col-span-2">
-                    <label className="text-xs font-medium text-gray-600">연결할 조교 (선택)</label>
-                    <select
-                      value={form.instructor_id}
-                      onChange={(e) => setForm({ ...form, instructor_id: e.target.value })}
-                      className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="">연결 안 함</option>
-                      {instructors.map((i) => (
-                        <option key={i.id} value={i.id}>{i.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </>
-            )}
-
-            {activeTab === 'student' && (
               <div className="flex flex-col gap-1 col-span-2">
-                <label className="text-xs font-medium text-gray-600">연결할 학생 (선택)</label>
+                <label className="text-xs font-medium text-gray-600">역할</label>
                 <select
-                  value={form.student_id}
-                  onChange={(e) => setForm({ ...form, student_id: e.target.value })}
+                  value={form.role}
+                  onChange={(e) => setForm({ ...form, role: e.target.value })}
                   className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
-                  <option value="">연결 안 함</option>
-                  {students.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
+                  <option value="instructor">조교</option>
+                  <option value="director">원장</option>
                 </select>
               </div>
             )}

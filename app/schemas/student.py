@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, ConfigDict
 from datetime import date, datetime
 from typing import Optional
 from uuid import UUID
@@ -6,10 +6,10 @@ from uuid import UUID
 
 class StudentBase(BaseModel):
     name: str
-    email: EmailStr
+    email: Optional[str] = None
     phone: Optional[str] = None
     date_of_birth: Optional[date] = None
-    enrollment_date: date
+    enrollment_date: Optional[date] = None
     status: str = "active"
 
 
@@ -19,7 +19,7 @@ class StudentCreate(StudentBase):
 
 class StudentUpdate(BaseModel):
     name: Optional[str] = None
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
     phone: Optional[str] = None
     date_of_birth: Optional[date] = None
     status: Optional[str] = None

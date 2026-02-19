@@ -6,6 +6,8 @@ from app.api.deps import get_db, get_current_staff_user, require_director, get_c
 from app.core.security import verify_password, get_password_hash, create_access_token
 from app.models.staff_user import StaffUser, StaffRole
 from app.models.student_user import StudentUser
+from app.models.instructor import Instructor
+from app.models.student import Student
 from app.schemas.auth import (
     LoginRequest, TokenResponse,
     StaffUserCreate, StaffUserUpdate, StaffUserResponse,
@@ -103,12 +105,24 @@ async def create_staff_user(
     if db.query(StaffUser).filter(StaffUser.username == data.username).first():
         raise HTTPException(status_code=400, detail="이미 사용 중인 아이디입니다.")
 
+    instructor_id = None
+
+    # 조교 역할이면 Instructor 레코드 자동 생성
+    if data.role == StaffRole.instructor:
+        instructor = Instructor(
+            name=data.name,
+            phone=data.phone,
+        )
+        db.add(instructor)
+        db.flush()
+        instructor_id = instructor.id
+
     user = StaffUser(
         username=data.username,
         hashed_password=get_password_hash(data.password),
         name=data.name,
         role=data.role,
-        instructor_id=data.instructor_id,
+        instructor_id=instructor_id,
     )
     db.add(user)
     db.commit()
@@ -129,14 +143,16 @@ async def update_staff_user(
 
     if data.name is not None:
         user.name = data.name
+        if user.instructor_id:
+            instructor = db.query(Instructor).filter(Instructor.id == user.instructor_id).first()
+            if instructor:
+                instructor.name = data.name
     if data.password is not None:
         user.hashed_password = get_password_hash(data.password)
     if data.role is not None:
         user.role = data.role
     if data.is_active is not None:
         user.is_active = data.is_active
-    if data.instructor_id is not None:
-        user.instructor_id = data.instructor_id
 
     db.commit()
     db.refresh(user)
@@ -154,6 +170,13 @@ async def delete_staff_user(
     user = db.query(StaffUser).filter(StaffUser.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    # 연결된 Instructor 레코드도 함께 삭제
+    if user.instructor_id:
+        instructor = db.query(Instructor).filter(Instructor.id == user.instructor_id).first()
+        if instructor:
+            db.delete(instructor)
+
     db.delete(user)
     db.commit()
     return None
@@ -178,11 +201,19 @@ async def create_student_user(
     if db.query(StudentUser).filter(StudentUser.username == data.username).first():
         raise HTTPException(status_code=400, detail="이미 사용 중인 아이디입니다.")
 
+    # Student 레코드 자동 생성
+    student = Student(
+        name=data.name,
+        phone=data.phone,
+    )
+    db.add(student)
+    db.flush()
+
     user = StudentUser(
         username=data.username,
         hashed_password=get_password_hash(data.password),
         name=data.name,
-        student_id=data.student_id,
+        student_id=student.id,
     )
     db.add(user)
     db.commit()
@@ -203,12 +234,14 @@ async def update_student_user(
 
     if data.name is not None:
         user.name = data.name
+        if user.student_id:
+            student = db.query(Student).filter(Student.id == user.student_id).first()
+            if student:
+                student.name = data.name
     if data.password is not None:
         user.hashed_password = get_password_hash(data.password)
     if data.is_active is not None:
         user.is_active = data.is_active
-    if data.student_id is not None:
-        user.student_id = data.student_id
 
     db.commit()
     db.refresh(user)
@@ -224,6 +257,13 @@ async def delete_student_user(
     user = db.query(StudentUser).filter(StudentUser.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    # 연결된 Student 레코드도 함께 삭제
+    if user.student_id:
+        student = db.query(Student).filter(Student.id == user.student_id).first()
+        if student:
+            db.delete(student)
+
     db.delete(user)
     db.commit()
     return None

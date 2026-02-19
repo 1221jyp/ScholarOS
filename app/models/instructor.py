@@ -13,10 +13,10 @@ class Instructor(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "instructors"
 
     name = Column(String(100), nullable=False)
-    email = Column(String(255), unique=True, nullable=False, index=True)
+    email = Column(String(255), unique=True, nullable=True, index=True)
     phone = Column(String(20), nullable=True)
     specialization = Column(String(100), nullable=True)
-    hire_date = Column(Date, nullable=False)
+    hire_date = Column(Date, nullable=True)
     status = Column(SQLEnum(InstructorStatus), default=InstructorStatus.ACTIVE, nullable=False)
 
     def __repr__(self):

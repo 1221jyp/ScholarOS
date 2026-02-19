@@ -26,7 +26,7 @@ class StaffUserCreate(BaseModel):
     password: str
     name: str
     role: StaffRole
-    instructor_id: Optional[str] = None
+    phone: Optional[str] = None
 
 
 class StaffUserUpdate(BaseModel):
@@ -34,7 +34,6 @@ class StaffUserUpdate(BaseModel):
     password: Optional[str] = None
     role: Optional[StaffRole] = None
     is_active: Optional[bool] = None
-    instructor_id: Optional[str] = None
 
 
 class StaffUserResponse(BaseModel):
@@ -54,14 +53,13 @@ class StudentUserCreate(BaseModel):
     username: str
     password: str
     name: str
-    student_id: Optional[str] = None
+    phone: Optional[str] = None
 
 
 class StudentUserUpdate(BaseModel):
     name: Optional[str] = None
     password: Optional[str] = None
     is_active: Optional[bool] = None
-    student_id: Optional[str] = None
 
 
 class StudentUserResponse(BaseModel):
