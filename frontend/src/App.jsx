@@ -14,15 +14,21 @@ import Grades from './pages/Grades';
 import AdminUsers from './pages/AdminUsers';
 import StudentHome from './pages/StudentHome';
 import LandingPage from './pages/LandingPage';
+import StaffLandingPage from './pages/StaffLandingPage';
+import Exams from './pages/Exams';
+import ExamCreate from './pages/ExamCreate';
+import ExamSubmissions from './pages/ExamSubmissions';
+import InstructorTimeManagement from './pages/InstructorTimeManagement';
+import InstructorSettlement from './pages/InstructorSettlement';
 
 // 로그인 모달 전역 컨트롤 (401 이벤트 수신)
 function AppRoutes() {
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [loginModal, setLoginModal] = useState({ isOpen: false, userType: 'student' });
   const { user, loading } = useAuth();
 
   // 401 응답 시 로그인 모달 오픈
   useEffect(() => {
-    const handler = () => setLoginModalOpen(true);
+    const handler = (e) => setLoginModal({ isOpen: true, userType: e.detail?.userType || 'student' });
     window.addEventListener('auth:logout', handler);
     return () => window.removeEventListener('auth:logout', handler);
   }, []);
@@ -31,15 +37,29 @@ function AppRoutes() {
 
   return (
     <>
-      <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
+      <LoginModal
+        isOpen={loginModal.isOpen}
+        onClose={() => setLoginModal({ ...loginModal, isOpen: false })}
+        userType={loginModal.userType}
+      />
       <Routes>
-        {/* 공개: 랜딩 페이지 */}
+        {/* 학생 로그인 페이지 */}
         <Route
           path="/"
           element={
             user
-              ? <Navigate to={user.user_type === 'student' ? '/student' : '/dashboard'} replace />
-              : <LandingPage onLoginClick={() => setLoginModalOpen(true)} />
+              ? <Navigate to={user.user_type === 'student' ? '/student' : '/admin/dashboard'} replace />
+              : <LandingPage onLoginClick={() => setLoginModal({ isOpen: true, userType: 'student' })} />
+          }
+        />
+
+        {/* 선생/조교 로그인 페이지 */}
+        <Route
+          path="/admin-login"
+          element={
+            user
+              ? <Navigate to={user.user_type === 'student' ? '/student' : '/admin/dashboard'} replace />
+              : <StaffLandingPage onLoginClick={() => setLoginModal({ isOpen: true, userType: 'staff' })} />
           }
         />
 
@@ -55,10 +75,10 @@ function AppRoutes() {
 
         {/* 직원(원장+조교) 전용 */}
         <Route
-          path="/"
+          path="/admin"
           element={
             <ProtectedRoute requiredType="staff">
-              <Layout onLoginClick={() => setLoginModalOpen(true)} />
+              <Layout />
             </ProtectedRoute>
           }
         >
@@ -67,11 +87,23 @@ function AppRoutes() {
           <Route path="study-sessions" element={<StudySessions />} />
           <Route path="students" element={<Students />} />
           <Route path="instructors" element={<Instructors />} />
+          <Route path="time-management" element={<InstructorTimeManagement />} />
           <Route path="attendance" element={<Attendance />} />
           <Route path="grades" element={<Grades />} />
+          <Route path="exams" element={<Exams />} />
+          <Route path="exams/create" element={<ExamCreate />} />
+          <Route path="exams/:examId/submissions" element={<ExamSubmissions />} />
           {/* 원장 전용 */}
           <Route
-            path="admin/users"
+            path="settlement"
+            element={
+              <ProtectedRoute requiredType="director">
+                <InstructorSettlement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="users"
             element={
               <ProtectedRoute requiredType="director">
                 <AdminUsers />

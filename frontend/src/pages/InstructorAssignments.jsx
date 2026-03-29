@@ -35,17 +35,17 @@ const InstructorAssignments = () => {
       {/* 페이지 헤더 */}
       <div className="flex items-start justify-between">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <CalendarIcon className="w-8 h-8 text-primary-600" />
-            <h1 className="text-3xl font-bold text-gray-900">조교 배치 관리</h1>
+          <div className="flex items-center gap-2 mb-2">
+            <CalendarIcon className="w-6 h-6 md:w-8 md:h-8 text-primary-600" />
+            <h1 className="text-xl md:text-3xl font-bold text-gray-900">조교 배치 관리</h1>
           </div>
-          <p className="text-gray-600">
+          <p className="text-sm md:text-base text-gray-600">
             자습 시간에 투입될 조교를 배치하고 관리합니다.
           </p>
         </div>
         <button
-          onClick={() => navigate('/study-sessions')}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          onClick={() => navigate('/admin/study-sessions')}
+          className="shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-2 md:px-4 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
           일정 추가

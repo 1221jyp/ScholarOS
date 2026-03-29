@@ -16,8 +16,15 @@ from app.models import (
     ClassSchedule,
     StudySession,
     InstructorAssignment,
+    InstructorTimeRecord,
     Attendance,
-    Grade
+    Grade,
+    StaffUser,
+    StudentUser,
+    Exam,
+    ExamQuestion,
+    ExamSubmission,
+    ExamAnswer,
 )
 
 # this is the Alembic Config object, which provides

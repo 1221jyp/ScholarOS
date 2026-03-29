@@ -2,8 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Calendar } from 'lucide-react';
 import { studySessionAPI, instructorAssignmentAPI, instructorAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const TIME_OPTIONS = [
+  '09:00', '09:30',
+  '10:00', '10:30',
+  '11:00', '11:30',
+  '12:00', '12:30',
+  '13:00', '13:30',
+  '14:00', '14:30',
+  '15:00', '15:30',
+  '16:00', '16:30',
   '17:00', '17:30',
   '18:00', '18:30',
   '19:00', '19:30',
@@ -32,6 +41,7 @@ const today = () => {
 
 const StudySessions = () => {
   const navigate = useNavigate();
+  const { user, isInstructor } = useAuth();
   const [instructors, setInstructors] = useState([]);
   const [form, setForm] = useState({
     name: '',
@@ -45,7 +55,11 @@ const StudySessions = () => {
 
   useEffect(() => {
     instructorAPI.getAll().then((res) => setInstructors(res.data)).catch(() => {});
-  }, []);
+    // 조교인 경우 자신을 자동 선택
+    if (isInstructor && user?.instructor_id) {
+      setForm((prev) => ({ ...prev, instructor_id: user.instructor_id }));
+    }
+  }, [isInstructor, user]);
 
   const endTimeOptions = TIME_OPTIONS.filter((t) => t > form.start_time);
 
@@ -94,7 +108,7 @@ const StudySessions = () => {
         assignment_date: form.date,
       });
 
-      navigate('/assignments');
+      navigate('/admin/assignments');
     } catch {
       setError('저장에 실패했습니다. 다시 시도해주세요.');
     } finally {
@@ -109,7 +123,7 @@ const StudySessions = () => {
       {/* 헤더 */}
       <div>
         <button
-          onClick={() => navigate('/assignments')}
+          onClick={() => navigate('/admin/assignments')}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4 transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -208,16 +222,17 @@ const StudySessions = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               조교 선택 <span className="text-red-500">*</span>
+              {isInstructor && <span className="ml-2 text-xs text-gray-500">(본인 고정)</span>}
             </label>
             {instructors.length === 0 ? (
               <p className="text-sm text-gray-400 py-2">
                 등록된 조교가 없습니다.{' '}
                 <button
                   type="button"
-                  onClick={() => navigate('/instructors')}
+                  onClick={() => navigate('/admin/users')}
                   className="text-primary-600 hover:underline"
                 >
-                  조교 관리
+                  사용자 관리
                 </button>
                 에서 먼저 추가해주세요.
               </p>
@@ -225,7 +240,8 @@ const StudySessions = () => {
               <select
                 value={form.instructor_id}
                 onChange={(e) => setForm({ ...form, instructor_id: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                disabled={isInstructor}
               >
                 <option value="">-- 조교를 선택하세요 --</option>
                 {instructors.map((i) => (
@@ -239,7 +255,7 @@ const StudySessions = () => {
           <div className="flex justify-end gap-3 pt-1">
             <button
               type="button"
-              onClick={() => navigate('/assignments')}
+              onClick={() => navigate('/admin/assignments')}
               className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               취소

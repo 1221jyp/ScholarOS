@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 from typing import List
-from uuid import UUID
 
 from app.api.deps import get_db, require_director_or_instructor
 from app.models.instructor import Instructor
@@ -33,7 +32,7 @@ async def list_instructors(
 
 @router.get("/{instructor_id}", response_model=InstructorResponse)
 async def get_instructor(
-    instructor_id: UUID = Path(..., description="Instructor ID"),
+    instructor_id: str = Path(..., description="Instructor ID"),
     db: Session = Depends(get_db)
 ):
     instructor = db.query(Instructor).filter(Instructor.id == instructor_id).first()
@@ -45,7 +44,7 @@ async def get_instructor(
 @router.put("/{instructor_id}", response_model=InstructorResponse)
 async def update_instructor(
     instructor_data: InstructorUpdate,
-    instructor_id: UUID = Path(..., description="Instructor ID"),
+    instructor_id: str = Path(..., description="Instructor ID"),
     db: Session = Depends(get_db)
 ):
     instructor = db.query(Instructor).filter(Instructor.id == instructor_id).first()
@@ -63,7 +62,7 @@ async def update_instructor(
 
 @router.delete("/{instructor_id}", status_code=204)
 async def delete_instructor(
-    instructor_id: UUID = Path(..., description="Instructor ID"),
+    instructor_id: str = Path(..., description="Instructor ID"),
     db: Session = Depends(get_db)
 ):
     instructor = db.query(Instructor).filter(Instructor.id == instructor_id).first()

@@ -17,6 +17,7 @@ class TokenResponse(BaseModel):
     role: Optional[str]   # "director" | "instructor" | None(학생)
     name: str
     user_id: str
+    instructor_id: Optional[str] = None  # 조교인 경우만
 
 
 # ──────────────── 직원(원장/조교) 계정 ────────────────
@@ -27,6 +28,8 @@ class StaffUserCreate(BaseModel):
     name: str
     role: StaffRole
     phone: Optional[str] = None
+    bank_name: Optional[str] = None
+    account_number: Optional[str] = None
 
 
 class StaffUserUpdate(BaseModel):

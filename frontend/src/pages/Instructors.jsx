@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { UserCheck, Phone, Briefcase } from 'lucide-react';
+import { UserCheck, Phone, Copy, Check } from 'lucide-react';
 import { instructorAPI } from '../services/api';
 
 const Instructors = () => {
   const [instructors, setInstructors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [copiedId, setCopiedId] = useState(null);
 
   useEffect(() => {
     fetchInstructors();
@@ -18,6 +19,16 @@ const Instructors = () => {
       console.error('조교 목록 조회 실패:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCopyAccount = async (instructorId, accountNumber) => {
+    try {
+      await navigator.clipboard.writeText(accountNumber);
+      setCopiedId(instructorId);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.error('복사 실패:', err);
     }
   };
 
@@ -70,10 +81,13 @@ const Instructors = () => {
                     연락처
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    전문분야
+                    은행명
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    입사일
+                    계좌번호
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    시급
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     상태
@@ -101,19 +115,42 @@ const Instructors = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 flex items-center gap-1">
-                        {instructor.specialization ? (
-                          <>
-                            <Briefcase className="w-3 h-3" />
-                            {instructor.specialization}
-                          </>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
+                      <div className="text-sm text-gray-900">
+                        {instructor.bank_name || <span className="text-gray-400">-</span>}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {instructor.hire_date ?? '-'}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {instructor.account_number ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-mono text-gray-900">
+                            {instructor.account_number}
+                          </span>
+                          <button
+                            onClick={() => handleCopyAccount(instructor.id, instructor.account_number)}
+                            className="p-1 hover:bg-gray-200 rounded transition-colors"
+                            title="계좌번호 복사"
+                          >
+                            {copiedId === instructor.id ? (
+                              <Check className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <Copy className="w-4 h-4 text-gray-400" />
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {instructor.hourly_rate ? (
+                          <span className="font-medium text-primary-600">
+                            {Number(instructor.hourly_rate).toLocaleString('ko-KR')}원
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">미설정</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(instructor.status)}

@@ -8,6 +8,7 @@ from app.models.staff_user import StaffUser, StaffRole
 from app.models.student_user import StudentUser
 from app.models.instructor import Instructor
 from app.models.student import Student
+from app.models.instructor_assignment import InstructorAssignment
 from app.schemas.auth import (
     LoginRequest, TokenResponse,
     StaffUserCreate, StaffUserUpdate, StaffUserResponse,
@@ -36,6 +37,7 @@ async def staff_login(login: LoginRequest, db: Session = Depends(get_db)):
         role=user.role.value,
         name=user.name,
         user_id=user.id,
+        instructor_id=user.instructor_id,
     )
 
 
@@ -112,6 +114,9 @@ async def create_staff_user(
         instructor = Instructor(
             name=data.name,
             phone=data.phone,
+            bank_name=data.bank_name,
+            account_number=data.account_number,
+            hourly_rate=11000,
         )
         db.add(instructor)
         db.flush()
@@ -173,6 +178,12 @@ async def delete_staff_user(
 
     # 연결된 Instructor 레코드도 함께 삭제
     if user.instructor_id:
+        # 먼저 instructor_assignments 삭제
+        db.query(InstructorAssignment).filter(
+            InstructorAssignment.instructor_id == user.instructor_id
+        ).delete()
+
+        # 그 다음 instructor 삭제
         instructor = db.query(Instructor).filter(Instructor.id == user.instructor_id).first()
         if instructor:
             db.delete(instructor)

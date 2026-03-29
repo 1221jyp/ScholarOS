@@ -36,6 +36,7 @@ export function AuthProvider({ children }) {
       name: data.name,
       role: data.role,
       user_type: data.user_type,
+      instructor_id: data.instructor_id || null,
     };
 
     setToken(data.access_token);

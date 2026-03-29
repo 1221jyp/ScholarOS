@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { instructorAPI, instructorAssignmentAPI } from '../../services/api';
 import { formatDate, formatTime } from '../../utils/dateHelpers';
+import { useAuth } from '../../contexts/AuthContext';
 
 const AssignmentModal = ({ isOpen, onClose, session, date, onSuccess }) => {
+  const { user, isInstructor } = useAuth();
   const [instructors, setInstructors] = useState([]);
   const [selectedInstructorId, setSelectedInstructorId] = useState('');
   const [notes, setNotes] = useState('');
@@ -11,9 +13,19 @@ const AssignmentModal = ({ isOpen, onClose, session, date, onSuccess }) => {
 
   useEffect(() => {
     if (isOpen) {
+      console.log('AssignmentModal opened', { isInstructor, user });
       fetchInstructors();
+      // 조교인 경우 자신을 자동 선택
+      if (isInstructor && user?.instructor_id) {
+        console.log('Setting instructor ID to:', user.instructor_id);
+        setSelectedInstructorId(user.instructor_id);
+      } else {
+        console.log('Clearing instructor selection');
+        setSelectedInstructorId('');
+      }
+      setNotes('');
     }
-  }, [isOpen]);
+  }, [isOpen, isInstructor, user]);
 
   const fetchInstructors = async () => {
     try {
@@ -91,12 +103,14 @@ const AssignmentModal = ({ isOpen, onClose, session, date, onSuccess }) => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               조교 선택 <span className="text-red-500">*</span>
+              {isInstructor && <span className="ml-2 text-xs text-gray-500">(본인 고정)</span>}
             </label>
             <select
               value={selectedInstructorId}
               onChange={(e) => setSelectedInstructorId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
               required
+              disabled={isInstructor}
             >
               <option value="">조교를 선택하세요</option>
               {instructors.map((instructor) => (

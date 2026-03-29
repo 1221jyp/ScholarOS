@@ -10,11 +10,11 @@ const Layout = () => {
   const closeSidebar = () => setIsSidebarOpen(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header onToggleSidebar={toggleSidebar} />
-      <div className="flex">
+      <div className="flex flex-1">
         <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-3 md:p-6 min-w-0">
           <Outlet />
         </main>
       </div>

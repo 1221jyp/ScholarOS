@@ -1,0 +1,31 @@
+app = "scholarios"
+primary_region = "nrt"  # Tokyo - 한국에서 가장 가까운 리전
+
+[build]
+
+[deploy]
+  release_command = "alembic upgrade head"
+
+[env]
+  APP_NAME = "ScholarOS"
+  DEBUG = "False"
+  TIMEZONE = "Asia/Seoul"
+  ACCESS_TOKEN_EXPIRE_MINUTES = "1440"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "15s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

@@ -16,6 +16,8 @@ from app.api.v1 import (
     attendance,
     grades,
     auth,
+    exams,
+    time_records,
 )
 
 # Create FastAPI application
@@ -80,9 +82,21 @@ app.include_router(
 )
 
 app.include_router(
+    exams.router,
+    prefix="/api/v1/exams",
+    tags=["Exams"]
+)
+
+app.include_router(
     auth.router,
     prefix="/api/v1/auth",
     tags=["Auth"]
+)
+
+app.include_router(
+    time_records.router,
+    prefix="/api/v1/time-records",
+    tags=["Time Records"]
 )
 
 
@@ -126,6 +140,9 @@ if os.path.exists(_dist_path):
 
     @app.get("/{full_path:path}", include_in_schema=False)
     async def serve_frontend(full_path: str):
+        file_path = os.path.join(_dist_path, full_path)
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            return FileResponse(file_path)
         return FileResponse(os.path.join(_dist_path, "index.html"))
 
     @app.get("/", include_in_schema=False)
